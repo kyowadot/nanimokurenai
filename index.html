@@ -1,13 +1,94 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sprite Sheet Toolset</title>
-    <script type="module" crossorigin src="./assets/index-B2BLUqaY.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BC-_gM_j.css">
-  </head>
-  <body class="bg-stone-950">
-    <div id="root"></div>
-  </body>
-  </html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pixel Upscaler x2 - No Blur</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: #fff; }
+        #drop-zone {
+            border: 4px dashed #444; width: 80%; margin: 40px auto; padding: 60px;
+            border-radius: 20px; transition: 0.3s; cursor: pointer; background: #252525;
+        }
+        #drop-zone.hover { border-color: #0af; background: #333; }
+        .info { color: #888; font-size: 0.9em; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Pixel Upscaler (x2)</h1>
+    <div id="drop-zone">ここにドット絵を叩き込め１</div>
+    <input type="file" id="file-input" multiple accept="image/*" style="display:none">
+    <p class="info">※Nearest Neighborを強制してクッキリさせるぞ１</p>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('hover'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('hover');
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('hover');
+            processFiles(e.dataTransfer.files);
+        };
+        fileInput.onchange = (e) => processFiles(e.target.files);
+
+        async function processFiles(files) {
+            if (files.length === 0) return;
+            
+            const zip = new JSZip();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            dropZone.innerText = "ドットを鋭利にしてるぞ１...";
+
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) continue;
+
+                const img = await loadImage(file);
+                
+                // 1. 先にサイズを決める１
+                canvas.width = img.width * 2;
+                canvas.height = img.height * 2;
+                
+                // 2. サイズ決定の「直後」にフィルタをオフにする（重要！）１
+                ctx.imageSmoothingEnabled = false;
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
+                ctx.msImageSmoothingEnabled = false;
+
+                // 3. 描画する１
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                const dataUrl = canvas.toDataURL('image/png');
+                const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+                zip.file(file.name.replace(/\.[^/.]+$/, "") + "_x2.png", base64Data, {base64: true});
+            }
+
+            const content = await zip.generateAsync({type: "blob"});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = "upscaled_pixels_x2.zip";
+            link.click();
+            
+            dropZone.innerText = "完了だ１！";
+            setTimeout(() => { dropZone.innerText = "ここにドット絵を叩き込め１"; }, 3000);
+        }
+
+        function loadImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</body>
+</html>
