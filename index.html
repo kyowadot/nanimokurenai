@@ -120,7 +120,6 @@
     // copy
     document.getElementById('copyBtn').addEventListener('click', async () => {
       await navigator.clipboard.writeText(memo.value);
-      alert('コピーしました');
     });
 
     // paste
@@ -150,10 +149,8 @@
 
     // delete
     document.getElementById('deleteBtn').addEventListener('click', () => {
-      if (confirm('メモを削除しますか？')) {
-        memo.value = '';
-        localStorage.removeItem('memo_text');
-      }
+      memo.value = '';
+      localStorage.removeItem('memo_text');
     });
 
     // font size
@@ -163,21 +160,36 @@
       memo.style.fontSize = fontSize + 'px';
     });
 
-    // save as .love (実体はtxt保存)
+    // save（最初だけ名前入力 → 以後は同じ名前で保存）
     document.getElementById('saveBtn').addEventListener('click', () => {
-  const blob = new Blob([memo.value], {
-    type: 'application/octet-stream'
-  });
+      let fileName = localStorage.getItem('memo_file_name');
 
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'result.love';
-  a.click();
-});
+      // 初回のみ名前を聞く
+      if (!fileName) {
+        fileName = prompt('ファイル名を入力', 'result');
+
+        if (!fileName) return;
+
+        if (!fileName.endsWith('.love')) {
+          fileName += '.love';
+        }
+
+        localStorage.setItem('memo_file_name', fileName);
+      }
+
+      const blob = new Blob([memo.value], {
+        type: 'application/octet-stream'
+      });
+
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.click();
+    });
 
     // 設定
     document.getElementById('settingBtn').addEventListener('click', () => {
-      alert('設定画面（今後追加）');
+      // 設定画面は今後追加予定
     });
 
     // 音声入力（Chrome Android対応）
