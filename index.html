@@ -116,6 +116,7 @@
     });
 
     // 保存ボタン：JSZipを使用して .love ファイルを作成
+   // 保存ボタン：JSZipを使用して .love ファイルを作成
     document.getElementById('saveBtn').addEventListener('click', async () => {
       if (!memo.value.trim()) {
         alert('メモが空です');
@@ -126,24 +127,32 @@
       if (!fileName) {
         fileName = prompt('プロジェクト名を入力してください', 'result');
         if (!fileName) return;
-        if (!fileName.endsWith('.love')) fileName += '.love';
+        // 拡張子チェック
+        if (!fileName.toLowerCase().endsWith('.love')) {
+          fileName += '.love';
+        }
         localStorage.setItem('memo_file_name', fileName);
       }
 
       try {
         const zip = new JSZip();
-        // メモの内容を main.lua という名前でZIP内に追加
         zip.file("main.lua", memo.value);
 
-        // ZIP生成（Blob形式）
-        const content = await zip.generateAsync({ type: "blob" });
+        // 生成時のオプションを変更
+        // mimeTypeをあえて指定しない、もしくは偽装することで勝手な拡張子付与を防ぐ
+        const content = await zip.generateAsync({ 
+          type: "blob",
+          mimeType: "" // ここを空にするのがコツ
+        });
 
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(content);
-        a.download = fileName;
+        // Blobを直接使うのではなく、新しいBlobとして型を上書きして生成
+        const file = new Blob([content], { type: 'application/x-love-game' }); 
+        
+        a.href = URL.createObjectURL(file);
+        a.download = fileName; // ここで指定した名前が優先される
         a.click();
         
-        // メモリ解放
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
       } catch (err) {
         alert('エラーが発生しました: ' + err.message);
