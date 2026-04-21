@@ -1,94 +1,191 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>Pixel Upscaler x2 - No Blur</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: #fff; }
-        #drop-zone {
-            border: 4px dashed #444; width: 80%; margin: 40px auto; padding: 60px;
-            border-radius: 20px; transition: 0.3s; cursor: pointer; background: #252525;
-        }
-        #drop-zone.hover { border-color: #0af; background: #333; }
-        .info { color: #888; font-size: 0.9em; margin-top: 10px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Memo Pad</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+
+    body {
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 10px 6px;
+      background: #1b1b1b;
+      border-bottom: 1px solid #333;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tool-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 12px;
+      background: #2a2a2a;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.96);
+    }
+
+    .editor-wrap {
+      flex: 1;
+      padding: 12px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100%;
+      resize: none;
+      border: none;
+      outline: none;
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 18px;
+      line-height: 1.6;
+      background: #1d1d1d;
+      color: white;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Pixel Upscaler (x2)</h1>
-    <div id="drop-zone">ここにドット絵を叩き込め１</div>
-    <input type="file" id="file-input" multiple accept="image/*" style="display:none">
-    <p class="info">※Nearest Neighborを強制してクッキリさせるぞ１</p>
+  <div class="toolbar">
+    <button class="tool-btn" id="voiceBtn" title="音声入力">🎤</button>
+    <button class="tool-btn" id="saveBtn" title="saveaslove">💾</button>
+    <button class="tool-btn" id="pasteBtn" title="貼り付け">📋</button>
+    <button class="tool-btn" id="copyBtn" title="コピー">📄</button>
+    <button class="tool-btn" id="deleteBtn" title="削除">🗑️</button>
+    <button class="tool-btn" id="undoBtn" title="元に戻す">↩️</button>
+    <button class="tool-btn" id="redoBtn" title="やり直し">↪️</button>
+    <button class="tool-btn" id="fontBtn" title="文字サイズ">🔠</button>
+    <button class="tool-btn" id="settingBtn" title="設定">⚙️</button>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <div class="editor-wrap">
+    <textarea id="memo" placeholder="ここにメモを書く..."></textarea>
+  </div>
 
-    <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
+  <script>
+    const memo = document.getElementById('memo');
+    let fontSize = 18;
+    let history = [''];
+    let historyIndex = 0;
 
-        dropZone.onclick = () => fileInput.click();
-        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('hover'); };
-        dropZone.ondragleave = () => dropZone.classList.remove('hover');
-        dropZone.ondrop = (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('hover');
-            processFiles(e.dataTransfer.files);
-        };
-        fileInput.onchange = (e) => processFiles(e.target.files);
+    // 自動保存
+    memo.value = localStorage.getItem('memo_text') || '';
+    memo.addEventListener('input', () => {
+      localStorage.setItem('memo_text', memo.value);
 
-        async function processFiles(files) {
-            if (files.length === 0) return;
-            
-            const zip = new JSZip();
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            dropZone.innerText = "ドットを鋭利にしてるぞ１...";
+      if (history[historyIndex] !== memo.value) {
+        history = history.slice(0, historyIndex + 1);
+        history.push(memo.value);
+        historyIndex++;
+      }
+    });
 
-            for (const file of files) {
-                if (!file.type.startsWith('image/')) continue;
+    // copy
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(memo.value);
+      alert('コピーしました');
+    });
 
-                const img = await loadImage(file);
-                
-                // 1. 先にサイズを決める１
-                canvas.width = img.width * 2;
-                canvas.height = img.height * 2;
-                
-                // 2. サイズ決定の「直後」にフィルタをオフにする（重要！）１
-                ctx.imageSmoothingEnabled = false;
-                ctx.mozImageSmoothingEnabled = false;
-                ctx.webkitImageSmoothingEnabled = false;
-                ctx.msImageSmoothingEnabled = false;
+    // paste
+    document.getElementById('pasteBtn').addEventListener('click', async () => {
+      const text = await navigator.clipboard.readText();
+      memo.value += text;
+      localStorage.setItem('memo_text', memo.value);
+    });
 
-                // 3. 描画する１
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                const dataUrl = canvas.toDataURL('image/png');
-                const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
-                zip.file(file.name.replace(/\.[^/.]+$/, "") + "_x2.png", base64Data, {base64: true});
-            }
+    // undo
+    document.getElementById('undoBtn').addEventListener('click', () => {
+      if (historyIndex > 0) {
+        historyIndex--;
+        memo.value = history[historyIndex];
+        localStorage.setItem('memo_text', memo.value);
+      }
+    });
 
-            const content = await zip.generateAsync({type: "blob"});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = "upscaled_pixels_x2.zip";
-            link.click();
-            
-            dropZone.innerText = "完了だ１！";
-            setTimeout(() => { dropZone.innerText = "ここにドット絵を叩き込め１"; }, 3000);
-        }
+    // redo
+    document.getElementById('redoBtn').addEventListener('click', () => {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        memo.value = history[historyIndex];
+        localStorage.setItem('memo_text', memo.value);
+      }
+    });
 
-        function loadImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => resolve(img);
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-    </script>
+    // delete
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+      if (confirm('メモを削除しますか？')) {
+        memo.value = '';
+        localStorage.removeItem('memo_text');
+      }
+    });
+
+    // font size
+    document.getElementById('fontBtn').addEventListener('click', () => {
+      fontSize += 2;
+      if (fontSize > 30) fontSize = 14;
+      memo.style.fontSize = fontSize + 'px';
+    });
+
+    // save as .love (実体はtxt保存)
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const blob = new Blob([memo.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'result.love';
+      a.click();
+    });
+
+    // 設定
+    document.getElementById('settingBtn').addEventListener('click', () => {
+      alert('設定画面（今後追加）');
+    });
+
+    // 音声入力（Chrome Android対応）
+    document.getElementById('voiceBtn').addEventListener('click', () => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        alert('この端末では音声入力に対応していません');
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ja-JP';
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        memo.value += text;
+        localStorage.setItem('memo_text', memo.value);
+      };
+    });
+  </script>
+
 </body>
 </html>
