@@ -81,6 +81,7 @@
       line-height: 1.6;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -198,7 +199,7 @@
       memo.style.fontSize = fontSize + 'px';
     });
 
-    document.getElementById('saveBtn').addEventListener('click', () => {
+    document.getElementById('saveBtn').addEventListener('click', async () => {
       let fileName = localStorage.getItem('memo_file_name');
 
       if (!fileName) {
@@ -212,12 +213,20 @@
         localStorage.setItem('memo_file_name', fileName);
       }
 
-      const blob = new Blob([memo.value], {
-        type: 'application/octet-stream'
+      const zip = new JSZip();
+
+      // メモ内容を main.lua として保存
+      zip.file('main.lua', memo.value || '-- empty main.lua');
+
+      // 必要なら conf.lua も追加可能
+      // zip.file('conf.lua', 'function love.conf(t) end');
+
+      const content = await zip.generateAsync({
+        type: 'blob'
       });
 
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      a.href = URL.createObjectURL(content);
       a.download = fileName;
       a.click();
     });
