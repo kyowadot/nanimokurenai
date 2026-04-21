@@ -18,9 +18,13 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow: hidden;
     }
 
     .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -75,6 +79,7 @@
   <div class="toolbar">
     <button class="tool-btn" id="voiceBtn" title="音声入力">🎤</button>
     <button class="tool-btn" id="saveBtn" title="saveaslove">💾</button>
+    <button class="tool-btn" id="selectAllBtn" title="全て選択">🔲</button>
     <button class="tool-btn" id="pasteBtn" title="貼り付け">📋</button>
     <button class="tool-btn" id="copyBtn" title="コピー">📄</button>
     <button class="tool-btn" id="deleteBtn" title="削除">🗑️</button>
@@ -104,6 +109,12 @@
         history.push(memo.value);
         historyIndex++;
       }
+    });
+
+    // select all
+    document.getElementById('selectAllBtn').addEventListener('click', () => {
+      memo.focus();
+      memo.select();
     });
 
     // copy
