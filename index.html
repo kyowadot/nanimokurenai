@@ -50,6 +50,15 @@
       transform: scale(0.96);
     }
 
+    .tool-btn svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      margin: auto;
+      pointer-events: none;
+      color: white;
+    }
+
     .editor-wrap {
       flex: 1;
       padding: 12px;
@@ -77,16 +86,16 @@
 <body>
 
   <div class="toolbar">
-    <button class="tool-btn" id="voiceBtn" title="音声入力">🎤</button>
-    <button class="tool-btn" id="saveBtn" title="saveaslove">💾</button>
-    <button class="tool-btn" id="selectAllBtn" title="全て選択">🔲</button>
-    <button class="tool-btn" id="pasteBtn" title="貼り付け">📋</button>
-    <button class="tool-btn" id="copyBtn" title="コピー">📄</button>
-    <button class="tool-btn" id="deleteBtn" title="削除">🗑️</button>
-    <button class="tool-btn" id="undoBtn" title="元に戻す">↩️</button>
-    <button class="tool-btn" id="redoBtn" title="やり直し">↪️</button>
-    <button class="tool-btn" id="fontBtn" title="文字サイズ">🔠</button>
-    <button class="tool-btn" id="settingBtn" title="設定">⚙️</button>
+    <button class="tool-btn" id="voiceBtn" title="音声入力"><svg viewBox="0 0 24 24" aria-label="音声入力"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="saveBtn" title="saveaslove"><svg viewBox="0 0 24 24" aria-label="保存"><path d="M5 3h11l3 3v15H5V3zm2 2v14h10V7.5L15.5 5H15v4H9V5H7z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="selectAllBtn" title="全て選択"><svg viewBox="0 0 24 24" aria-label="全選択"><path d="M4 4h7v2H6v5H4V4zm9 0h7v7h-2V6h-5V4zM4 13h2v5h5v2H4v-7zm14 0h2v7h-7v-2h5v-5z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="pasteBtn" title="貼り付け"><svg viewBox="0 0 24 24" aria-label="貼り付け"><path d="M9 2h6v2h3v18H6V4h3V2zm2 2v1h2V4h-2zm-3 3v13h8V7H8z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="copyBtn" title="コピー"><svg viewBox="0 0 24 24" aria-label="コピー"><path d="M8 7V3h11v14h-4v4H4V7h4zm2 0h5v8h2V5h-7v2zm-4 2v10h7V9H6z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="deleteBtn" title="削除"><svg viewBox="0 0 24 24" aria-label="削除"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="undoBtn" title="元に戻す"><svg viewBox="0 0 24 24" aria-label="元に戻す"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6a1 1 0 1 0 2 0c0-4.42-3.58-8-8-8z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="redoBtn" title="やり直し"><svg viewBox="0 0 24 24" aria-label="やり直し"><path d="M12 5c-4.42 0-8 3.58-8 8a1 1 0 1 0 2 0c0-3.31 2.69-6 6-6v3l5-5-5-5v3z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="fontBtn" title="文字サイズ"><svg viewBox="0 0 24 24" aria-label="文字サイズ"><path d="M4 20l4-12h2l4 12h-2l-1-3H7l-1 3H4zm4-5h3l-1.5-4.5L8 15zm8 5V8h6v2h-2v10h-2V10h-2V8z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="settingBtn" title="設定"><svg viewBox="0 0 24 24" aria-label="設定"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm9 4l-2.1.7.2 2.2-2 1.2-1.7-1.4-2 .8-.4 2.2h-2l-.4-2.2-2-.8-1.7 1.4-2-1.2.2-2.2L3 12l2.1-.7-.2-2.2 2-1.2 1.7 1.4 2-.8.4-2.2h2l.4 2.2 2 .8 1.7-1.4 2 1.2-.2 2.2L21 12z" fill="currentColor"/></svg></button>
   </div>
 
   <div class="editor-wrap">
