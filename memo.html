@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ドット絵エディタ</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: none; }
     body {
       font-family: sans-serif;
       background: #111;
@@ -44,6 +44,7 @@
       position: relative;
       overflow: auto;
       background: #1d1d1d;
+      touch-action: pan-x pan-y;
     }
     .sprite-grid {
       display: grid;
@@ -62,6 +63,7 @@
       cursor: pointer;
       position: relative;
       overflow: hidden;
+      touch-action: none;
     }
     .sprite-cell.selected { border-color: #4CAF50; }
     .sprite-cell .bg {
@@ -73,16 +75,17 @@
     }
     .fixed-window {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 10px;
+      right: 10px;
       background: #2a2a2a;
       border: 2px solid #444;
       border-radius: 12px;
       display: none;
       flex-direction: column;
       z-index: 100;
-      min-width: 200px;
-      min-height: 200px;
+      min-width: 64px;
+      min-height: 64px;
+      touch-action: none;
     }
     .fixed-window.show { display: flex; }
     .fixed-window.edit-mode {
@@ -122,12 +125,14 @@
       position: absolute;
       width: 100%;
       height: 100%;
+      touch-action: none;
     }
     .chip {
       position: absolute;
       cursor: move;
       background-size: cover;
       background-repeat: no-repeat;
+      touch-action: none;
     }
     .chip.dragging { opacity: 0.6; z-index: 1000; }
     .zoom-controls {
@@ -355,18 +360,23 @@
       render();
     };
 
-    // ピンチズーム
+    // ピンチズーム：main-areaのみ
     let pinchStart = 0;
-    document.addEventListener('touchstart', (e) => {
+    let isPinching = false;
+    const mainArea = document.querySelector('.main-area');
+    
+    mainArea.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
+        isPinching = true;
         pinchStart = Math.hypot(
           e.touches[0].pageX - e.touches[1].pageX,
           e.touches[0].pageY - e.touches[1].pageY
         );
       }
     }, { passive: true });
-    document.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2) {
+    
+    mainArea.addEventListener('touchmove', (e) => {
+      if (isPinching && e.touches.length === 2) {
         e.preventDefault();
         const d = Math.hypot(
           e.touches[0].pageX - e.touches[1].pageX,
@@ -375,6 +385,17 @@
         state.zoom *= d / pinchStart;
         pinchStart = d;
         render();
+      }
+    }, { passive: false });
+    
+    mainArea.addEventListener('touchend', () => {
+      isPinching = false;
+    }, { passive: true });
+    
+    // 標準ピンチズームを無効化
+    document.addEventListener('touchmove', (e) => {
+      if (e.scale !== 1) {
+        e.preventDefault();
       }
     }, { passive: false });
 
@@ -389,7 +410,37 @@
         bg.className = 'bg';
         bg.style.backgroundImage = `url(${sp.src})`;
         cell.appendChild(bg);
-        cell.onclick = (e) => onSpriteClick(e, sp, cell);
+        // 高速タップ対応：touchstartで即座に処理
+        let touchStartTime = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        cell.addEventListener('touchstart', (e) => {
+          touchStartTime = Date.now();
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        cell.addEventListener('touchend', (e) => {
+          const touchEndTime = Date.now();
+          const touchEndX = e.changedTouches[0].clientX;
+          const touchEndY = e.changedTouches[0].clientY;
+          const deltaTime = touchEndTime - touchStartTime;
+          const deltaX = Math.abs(touchEndX - touchStartX);
+          const deltaY = Math.abs(touchEndY - touchStartY);
+          
+          // タップ判定（300ms以内、10px以内の移動）
+          if (deltaTime < 300 && deltaX < 10 && deltaY < 10) {
+            e.preventDefault();
+            onSpriteClick(e.changedTouches[0], sp, cell);
+          }
+        }, { passive: false });
+        
+        cell.addEventListener('click', (e) => {
+          // PC用
+          onSpriteClick(e, sp, cell);
+        });
+        
         els.grid.appendChild(cell);
       });
 
@@ -454,13 +505,15 @@
       render();
     }
 
-    // ドラッグ
+    // ドラッグ：高速タッチ対応
     function setupDrag(el, chip, idx) {
       let dragging = false;
       let sx, sy, ox, oy;
+      let touchStartTime = 0;
 
       const start = (e) => {
         dragging = true;
+        touchStartTime = Date.now();
         el.classList.add('dragging');
         const cx = e.touches ? e.touches[0].clientX : e.clientX;
         const cy = e.touches ? e.touches[0].clientY : e.clientY;
@@ -481,16 +534,25 @@
         el.style.top = `${chip.y}px`;
       };
 
-      const end = () => {
+      const end = (e) => {
         if (!dragging) return;
         dragging = false;
         el.classList.remove('dragging');
+        
+        // タップかドラッグか判定
+        const deltaTime = Date.now() - touchStartTime;
+        
         const rc = els.canvas.getBoundingClientRect();
         const re = el.getBoundingClientRect();
+        
+        // 外に出ていたら削除
         if (re.right < rc.left || re.left > rc.right || re.bottom < rc.top || re.top > rc.bottom) {
           state.chips.splice(idx, 1);
           saveHist();
           render();
+        } else if (deltaTime < 200) {
+          // 短いタップは無視（クリックとして扱う）
+          saveHist();
         } else {
           saveHist();
         }
@@ -501,7 +563,7 @@
       document.addEventListener('mousemove', move, { passive: false });
       document.addEventListener('touchmove', move, { passive: false });
       document.addEventListener('mouseup', end);
-      document.addEventListener('touchend', end);
+      document.addEventListener('touchend', end, { passive: false });
     }
 
     // リサイズ
