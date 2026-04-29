@@ -83,6 +83,7 @@
       top: 0;
       left: -280px;
       width: 280px;
+      max-width: 80vw;
       height: 100vh;
       background: #1b1b1b;
       border-right: 1px solid #333;
@@ -417,7 +418,7 @@
     }
 
     function showAddFileDialog() {
-      const choice = prompt('追加するファイルの種類を選択:\n1: 画像\n2: 音声\n3: メモ\n番号を入力してください', '3');
+      const choice = prompt('追加するファイルの種類を選択:\n1: 画像\n2: 音声\n3: メモ\n番号を入力してください', '1');
       
       if (!choice) return;
 
