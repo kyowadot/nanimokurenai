@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1b1b1b">
+  <title>画像エディタ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #111;
+      color: #fff;
+      height: 100dvh;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 8px 4px;
+      background: #1b1b1b;
+      border-bottom: 1px solid #333;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+
+    .tool-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 12px;
+      background: #2a2a2a;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.96);
+      background: #3a3a3a;
+    }
+
+    .tool-btn.active {
+      background: #4a4a4a;
+      border: 2px solid #666;
+    }
+
+    .tool-btn svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .main-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #1d1d1d;
+    }
+
+    .image-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      gap: 0;
+      overflow: auto;
+    }
+
+    .grid-cell {
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      background: #222;
+    }
+
+    .grid-cell:hover {
+      background: #2a2a2a;
+    }
+
+    .grid-cell.selected {
+      border: 2px solid #4CAF50;
+      background: #2a3a2a;
+    }
+
+    .grid-cell img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .layer-indicator {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .fixed-window {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2a2a2a;
+      border: 2px solid #444;
+      border-radius: 12px;
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+      min-width: 200px;
+      min-height: 200px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .fixed-window.show {
+      display: flex;
+    }
+
+    .fixed-window.edit-mode {
+      bottom: 0;
+      right: 0;
+      left: 0;
+      border-radius: 0;
+      border: none;
+      border-top: 2px solid #444;
+      min-width: 100%;
+      min-height: 50%;
+    }
+
+    .fixed-window-header {
+      padding: 8px 12px;
+      background: #3a3a3a;
+      border-bottom: 1px solid #444;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: ns-resize;
+      flex-shrink: 0;
+    }
+
+    .fixed-window-header.edit-mode {
+      cursor: ns-resize;
+    }
+
+    .fixed-window-title {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .fixed-window-close {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 4px;
+      background: #d32f2f;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fixed-window-content {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #1d1d1d;
+    }
+
+    .fixed-window-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      gap: 0;
+      overflow: auto;
+    }
+
+    .fixed-window-grid .grid-cell {
+      position: absolute;
+      cursor: move;
+    }
+
+    .fixed-window-grid .grid-cell.dragging {
+      opacity: 0.5;
+      z-index: 1001;
+    }
+
+    .zoom-controls {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
+    }
+
+    .zoom-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      background: #2a2a2a;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-btn:active {
+      background: #3a3a3a;
+    }
+
+    .zoom-level {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="tool-btn" id="addBtn" title="画像追加">＋</button>
+    <button class="tool-btn" id="deleteBtn" title="削除">－</button>
+    <button class="tool-btn" id="undoBtn" title="元に戻す"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6a1 1 0 1 0 2 0c0-4.42-3.58-8-8-8z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="redoBtn" title="やり直し"><svg viewBox="0 0 24 24"><path d="M12 5c-4.42 0-8 3.58-8 8a1 1 0 1 0 2 0c0-3.31 2.69-6 6-6v3l5-5-5-5v3z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="modeBtn" title="モード切り替え">♺</button>
+    <button class="tool-btn" id="backBtn" title="戻る"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5zm3 3h8v2H8V8zm0 4h8v2H8v-2zm0 4h5v2H8v-2z" fill="currentColor"/></svg></button>
+  </div>
+  <div class="main-area">
+    <div class="image-grid" id="imageGrid"></div>
+  </div>
+  <div class="fixed-window" id="fixedWindow">
+    <div class="fixed-window-header" id="fixedWindowHeader">
+      <span class="fixed-window-title">固定窓</span>
+      <button class="fixed-window-close" id="fixedWindowClose">×</button>
+    </div>
+    <div class="fixed-window-content">
+      <div class="fixed-window-grid" id="fixedWindowGrid"></div>
+    </div>
+  </div>
+  <div class="zoom-controls">
+    <button class="zoom-btn" id="zoomInBtn">+</button>
+    <div class="zoom-level" id="zoomLevel">100%</div>
+    <button class="zoom-btn" id="zoomOutBtn">−</button>
+  </div>
+  <script>
+    // 状態管理
+    const state = {
+      images: [], // { id, src, x, y, width, height, cellWidth, cellHeight, layers: [] }
+      selectedImageId: null,
+      isEditMode: false,
+      zoom: 1,
+      fixedWindowImages: [], // { id, src, x, y, width, height, cellWidth, cellHeight }
+      fixedWindowHeight: 300,
+      history: [],
+      historyIndex: -1
+    };
+
+    // DOM要素
+    const imageGrid = document.getElementById('imageGrid');
+    const fixedWindow = document.getElementById('fixedWindow');
+    const fixedWindowHeader = document.getElementById('fixedWindowHeader');
+    const fixedWindowGrid = document.getElementById('fixedWindowGrid');
+    const fixedWindowClose = document.getElementById('fixedWindowClose');
+    const zoomLevel = document.getElementById('zoomLevel');
+
+    // 画像サイズ判定
+    function parseImageSize(filename) {
+      const match = filename.match(/_(\d+)x(\d+)\./);
+      if (match) {
+        return { width: parseInt(match[1]), height: parseInt(match[2]) };
+      }
+      return { width: 32, height: 32 }; // デフォルト
+    }
+
+    // 履歴管理
+    function saveState() {
+      const stateCopy = JSON.parse(JSON.stringify({
+        images: state.images,
+        selectedImageId: state.selectedImageId,
+        isEditMode: state.isEditMode,
+        zoom: state.zoom,
+        fixedWindowImages: state.fixedWindowImages,
+        fixedWindowHeight: state.fixedWindowHeight
+      }));
+      state.history = state.history.slice(0, state.historyIndex + 1);
+      state.history.push(stateCopy);
+      state.historyIndex++;
+      saveToLocalStorage();
+    }
+
+    function undo() {
+      if (state.historyIndex > 0) {
+        state.historyIndex--;
+        restoreState(state.history[state.historyIndex]);
+      }
+    }
+
+    function redo() {
+      if (state.historyIndex < state.history.length - 1) {
+        state.historyIndex++;
+        restoreState(state.history[state.historyIndex]);
+      }
+    }
+
+    function restoreState(savedState) {
+      state.images = JSON.parse(JSON.stringify(savedState.images));
+      state.selectedImageId = savedState.selectedImageId;
+      state.isEditMode = savedState.isEditMode;
+      state.zoom = savedState.zoom;
+      state.fixedWindowImages = JSON.parse(JSON.stringify(savedState.fixedWindowImages));
+      state.fixedWindowHeight = savedState.fixedWindowHeight;
+      render();
+    }
+
+    // localStorage
+    function saveToLocalStorage() {
+      localStorage.setItem('memo_editor_state', JSON.stringify({
+        images: state.images,
+        selectedImageId: state.selectedImageId,
+        isEditMode: state.isEditMode,
+        zoom: state.zoom,
+        fixedWindowImages: state.fixedWindowImages,
+        fixedWindowHeight: state.fixedWindowHeight
+      }));
+    }
+
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('memo_editor_state');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state.images = parsed.images || [];
+          state.selectedImageId = parsed.selectedImageId || null;
+          state.isEditMode = parsed.isEditMode || false;
+          state.zoom = parsed.zoom || 1;
+          state.fixedWindowImages = parsed.fixedWindowImages || [];
+          state.fixedWindowHeight = parsed.fixedWindowHeight || 300;
+          state.history = [JSON.parse(JSON.stringify({
+            images: state.images,
+            selectedImageId: state.selectedImageId,
+            isEditMode: state.isEditMode,
+            zoom: state.zoom,
+            fixedWindowImages: state.fixedWindowImages,
+            fixedWindowHeight: state.fixedWindowHeight
+          }))];
+          state.historyIndex = 0;
+        } catch (e) {
+          console.error('Failed to load state:', e);
+        }
+      } else {
+        saveState();
+      }
+    }
+
+    // 画像追加
+    function addImage(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const size = parseImageSize(file.name);
+        const newImage = {
+          id: Date.now().toString(),
+          src: e.target.result,
+          name: file.name,
+          x: 0,
+          y: 0,
+          width: size.width,
+          height: size.height,
+          cellWidth: size.width,
+          cellHeight: size.height,
+          layers: []
+        };
+        state.images.push(newImage);
+        state.selectedImageId = newImage.id;
+        saveState();
+        render();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 画像削除
+    function deleteSelectedImage() {
+      if (state.selectedImageId) {
+        state.images = state.images.filter(img => img.id !== state.selectedImageId);
+        state.selectedImageId = null;
+        saveState();
+        render();
+      }
+    }
+
+    // レンダリング
+    function render() {
+      renderImageGrid();
+      renderFixedWindow();
+      updateZoomDisplay();
+      updateModeButton();
+    }
+
+    function renderImageGrid() {
+      imageGrid.innerHTML = '';
+      
+      if (state.images.length === 0) {
+        imageGrid.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">＋ボタンで画像を追加</div>';
+        return;
+      }
+
+      const maxCellWidth = Math.max(...state.images.map(img => img.cellWidth));
+      const maxCellHeight = Math.max(...state.images.map(img => img.cellHeight));
+      
+      imageGrid.style.gridTemplateColumns = `repeat(auto-fill, ${maxCellWidth * state.zoom}px)`;
+      imageGrid.style.gridTemplateRows = `repeat(auto-fill, ${maxCellHeight * state.zoom}px)`;
+
+      state.images.forEach((image, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        if (image.id === state.selectedImageId) {
+          cell.classList.add('selected');
+        }
+        cell.style.width = `${image.cellWidth * state.zoom}px`;
+        cell.style.height = `${image.cellHeight * state.zoom}px`;
+
+        const img = document.createElement('img');
+        img.src = image.src;
+        img.style.width = `${image.width * state.zoom}px`;
+        img.style.height = `${image.height * state.zoom}px`;
+
+        if (image.layers.length > 0) {
+          const indicator = document.createElement('div');
+          indicator.className = 'layer-indicator';
+          indicator.textContent = image.layers.length;
+          cell.appendChild(indicator);
+        }
+
+        cell.appendChild(img);
+
+        cell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.selectedImageId = image.id;
+          saveState();
+          render();
+        });
+
+        cell.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          state.selectedImageId = image.id;
+          saveState();
+          render();
+        }, { passive: true });
+
+        imageGrid.appendChild(cell);
+      });
+    }
+
+    function renderFixedWindow() {
+      fixedWindowGrid.innerHTML = '';
+      
+      if (state.fixedWindowImages.length === 0) {
+        fixedWindow.classList.remove('show');
+        return;
+      }
+
+      fixedWindow.classList.add('show');
+      fixedWindow.style.height = `${state.fixedWindowHeight}px`;
+
+      if (state.isEditMode) {
+        fixedWindow.classList.add('edit-mode');
+        fixedWindowHeader.classList.add('edit-mode');
+      } else {
+        fixedWindow.classList.remove('edit-mode');
+        fixedWindowHeader.classList.remove('edit-mode');
+      }
+
+      const maxCellWidth = Math.max(...state.fixedWindowImages.map(img => img.cellWidth));
+      const maxCellHeight = Math.max(...state.fixedWindowImages.map(img => img.cellHeight));
+
+      state.fixedWindowImages.forEach((image, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.style.position = 'absolute';
+        cell.style.left = `${image.x}px`;
+        cell.style.top = `${image.y}px`;
+        cell.style.width = `${image.cellWidth * state.zoom}px`;
+        cell.style.height = `${image.cellHeight * state.zoom}px`;
+
+        const img = document.createElement('img');
+        img.src = image.src;
+        img.style.width = `${image.width * state.zoom}px`;
+        img.style.height = `${image.height * state.zoom}px`;
+
+        cell.appendChild(img);
+
+        if (state.isEditMode) {
+          setupDrag(cell, image, index);
+        }
+
+        fixedWindowGrid.appendChild(cell);
+      });
+    }
+
+    function updateZoomDisplay() {
+      zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+    }
+
+    function updateModeButton() {
+      const modeBtn = document.getElementById('modeBtn');
+      if (state.isEditMode) {
+        modeBtn.classList.add('active');
+      } else {
+        modeBtn.classList.remove('active');
+      }
+    }
+
+    // ドラッグ機能
+    function setupDrag(element, imageData, index) {
+      let isDragging = false;
+      let startX, startY, initialX, initialY;
+
+      const startDrag = (e) => {
+        isDragging = true;
+        element.classList.add('dragging');
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        startX = clientX;
+        startY = clientY;
+        initialX = imageData.x;
+        initialY = imageData.y;
+      };
+
+      const doDrag = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+        
+        imageData.x = initialX + dx;
+        imageData.y = initialY + dy;
+        
+        element.style.left = `${imageData.x}px`;
+        element.style.top = `${imageData.y}px`;
+      };
+
+      const endDrag = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        element.classList.remove('dragging');
+        
+        const rect = fixedWindowGrid.getBoundingClientRect();
+        const cellRect = element.getBoundingClientRect();
+        
+        // 固定窓の外にドラッグされた場合は削除
+        if (cellRect.right < rect.left || cellRect.left > rect.right ||
+            cellRect.bottom < rect.top || cellRect.top > rect.bottom) {
+          state.fixedWindowImages.splice(index, 1);
+          saveState();
+          render();
+        } else {
+          saveState();
+        }
+      };
+
+      element.addEventListener('mousedown', startDrag);
+      element.addEventListener('touchstart', startDrag, { passive: true });
+      
+      document.addEventListener('mousemove', doDrag);
+      document.addEventListener('touchmove', doDrag, { passive: false });
+      
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchend', endDrag);
+    }
+
+    // 固定窓の高さ調整
+    function setupWindowResize() {
+      let isResizing = false;
+      let startY, startHeight;
+
+      const startResize = (e) => {
+        isResizing = true;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startY = clientY;
+        startHeight = state.fixedWindowHeight;
+      };
+
+      const doResize = (e) => {
+        if (!isResizing) return;
+        e.preventDefault();
+        
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dy = clientY - startY;
+        
+        state.fixedWindowHeight = Math.max(100, startHeight - dy);
+        fixedWindow.style.height = `${state.fixedWindowHeight}px`;
+      };
+
+      const endResize = () => {
+        if (!isResizing) return;
+        isResizing = false;
+        saveState();
+      };
+
+      fixedWindowHeader.addEventListener('mousedown', startResize);
+      fixedWindowHeader.addEventListener('touchstart', startResize, { passive: true });
+      
+      document.addEventListener('mousemove', doResize);
+      document.addEventListener('touchmove', doResize, { passive: false });
+      
+      document.addEventListener('mouseup', endResize);
+      document.addEventListener('touchend', endResize);
+    }
+
+    // イベントリスナー
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          addImage(file);
+        }
+      };
+      input.click();
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', deleteSelectedImage);
+
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    document.getElementById('redoBtn').addEventListener('click', redo);
+
+    document.getElementById('modeBtn').addEventListener('click', () => {
+      state.isEditMode = !state.isEditMode;
+      saveState();
+      render();
+    });
+
+    document.getElementById('backBtn').addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    fixedWindowClose.addEventListener('click', () => {
+      state.fixedWindowImages = [];
+      saveState();
+      render();
+    });
+
+    document.getElementById('zoomInBtn').addEventListener('click', () => {
+      state.zoom = Math.min(state.zoom * 1.2, 10);
+      saveState();
+      render();
+    });
+
+    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+      state.zoom = Math.max(state.zoom / 1.2, 0.1);
+      saveState();
+      render();
+    });
+
+    // 画像をクリックして固定窓に追加
+    imageGrid.addEventListener('click', (e) => {
+      if (state.selectedImageId && !state.isEditMode) {
+        const selectedImage = state.images.find(img => img.id === state.selectedImageId);
+        if (selectedImage) {
+          // 同じ座標に重ねて追加
+          const existingAtSamePos = state.fixedWindowImages.find(
+            img => img.x === selectedImage.x && img.y === selectedImage.y
+          );
+          
+          if (existingAtSamePos) {
+            // レイヤーとして追加
+            if (!existingAtSamePos.layers) {
+              existingAtSamePos.layers = [];
+            }
+            existingAtSamePos.layers.push({
+              id: Date.now().toString(),
+              src: selectedImage.src,
+              width: selectedImage.width,
+              height: selectedImage.height
+            });
+          } else {
+            // 新しい位置に追加
+            state.fixedWindowImages.push({
+              id: Date.now().toString(),
+              src: selectedImage.src,
+              x: 0,
+              y: 0,
+              width: selectedImage.width,
+              height: selectedImage.height,
+              cellWidth: selectedImage.cellWidth,
+              cellHeight: selectedImage.cellHeight,
+              layers: []
+            });
+          }
+          saveState();
+          render();
+        }
+      }
+    });
+
+    // 編集モードで画像をクリックして固定窓に追加
+    imageGrid.addEventListener('click', (e) => {
+      if (state.selectedImageId && state.isEditMode) {
+        const selectedImage = state.images.find(img => img.id === state.selectedImageId);
+        if (selectedImage) {
+          state.fixedWindowImages.push({
+            id: Date.now().toString(),
+            src: selectedImage.src,
+            x: 0,
+            y: 0,
+            width: selectedImage.width,
+            height: selectedImage.height,
+            cellWidth: selectedImage.cellWidth,
+            cellHeight: selectedImage.cellHeight,
+            layers: []
+          });
+          saveState();
+          render();
+        }
+      }
+    });
+
+    // 初期化
+    loadFromLocalStorage();
+    setupWindowResize();
+    render();
+  </script>
+</body>
+</html>

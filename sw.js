@@ -2,7 +2,9 @@ const CACHE_NAME = 'memopad-v1';
 const urlsToCache = [
   './',
   './index.html',
-  './manifest.json'
+  './memo.html',
+  './manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
 ];
 
 self.addEventListener('install', (event) => {
