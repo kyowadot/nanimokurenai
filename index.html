@@ -96,6 +96,16 @@
     <textarea id="memo" placeholder="ここにLuaコードを入力..."></textarea>
   </div>
   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.log('Service Worker registration failed:', error);
+        });
+    }
+
     const memo = document.getElementById('memo');
     let fontSize = 18;
     let history = [localStorage.getItem('memo_text') || ''];
