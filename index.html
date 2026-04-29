@@ -77,10 +77,179 @@
       background: #1d1d1d;
       color: white;
     }
+
+    .slide-menu {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      background: #1b1b1b;
+      border-right: 1px solid #333;
+      transition: left 0.3s ease;
+      z-index: 1000;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .slide-menu.open {
+      left: 0;
+    }
+
+    .slide-menu-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+    }
+
+    .slide-menu-overlay.show {
+      display: block;
+    }
+
+    .folder-item {
+      background: #2a2a2a;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+
+    .folder-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .folder-icon {
+      width: 40px;
+      height: 40px;
+      background: #3a3a3a;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .folder-name {
+      flex: 1;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .folder-actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .folder-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: #444;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .folder-btn:hover {
+      background: #555;
+    }
+
+    .folder-content {
+      padding-left: 10px;
+      border-left: 2px solid #444;
+      margin-left: 20px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: #333;
+      border-radius: 6px;
+      margin-bottom: 5px;
+    }
+
+    .file-icon {
+      font-size: 16px;
+    }
+
+    .file-name {
+      flex: 1;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .file-name:hover {
+      color: #aaa;
+    }
+
+    .delete-file-btn {
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 4px;
+      background: #d32f2f;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .preview-area {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      height: calc(100vh - 60px);
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 998;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-area.show {
+      display: flex;
+    }
+
+    .preview-content {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .preview-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: #d32f2f;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
   <div class="toolbar">
+    <button class="tool-btn" id="menuBtn" title="メニュー"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" fill="currentColor"/></svg></button>
     <button class="tool-btn" id="voiceBtn" title="音声入力"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0z" fill="currentColor"/></svg></button>
     <button class="tool-btn" id="saveBtn" title="LÖVEとして保存"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5V3zm2 2v14h10V7.5L15.5 5H15v4H9V5H7z" fill="currentColor"/></svg></button>
     <button class="tool-btn" id="selectAllBtn" title="全て選択"><svg viewBox="0 0 24 24"><path d="M4 4h7v2H6v5H4V4zm9 0h7v7h-2V6h-5V4zM4 13h2v5h5v2H4v-7zm14 0h2v7h-7v-2h5v-5z" fill="currentColor"/></svg></button>
@@ -94,6 +263,15 @@
   </div>
   <div class="editor-wrap">
     <textarea id="memo" placeholder="ここにLuaコードを入力..."></textarea>
+  </div>
+  <div class="slide-menu-overlay" id="menuOverlay"></div>
+  <div class="slide-menu" id="slideMenu">
+    <h3>プロジェクトフォルダー</h3>
+    <div id="folderContainer"></div>
+  </div>
+  <div class="preview-area" id="previewArea">
+    <button class="preview-close" id="previewClose">×</button>
+    <img class="preview-content" id="previewImage" alt="プレビュー">
   </div>
   <script>
     if ('serviceWorker' in navigator) {
@@ -111,6 +289,220 @@
     let history = [localStorage.getItem('memo_text') || ''];
     let historyIndex = 0;
 
+    // 仮想フォルダーのデータ構造
+    let virtualFolder = {
+      name: 'Folder',
+      files: []
+    };
+
+    // スライドメニューの開閉
+    const slideMenu = document.getElementById('slideMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const menuBtn = document.getElementById('menuBtn');
+
+    function openMenu() {
+      slideMenu.classList.add('open');
+      menuOverlay.classList.add('show');
+    }
+
+    function closeMenu() {
+      slideMenu.classList.remove('open');
+      menuOverlay.classList.remove('show');
+    }
+
+    menuBtn.addEventListener('click', openMenu);
+    menuOverlay.addEventListener('click', closeMenu);
+
+    // フォルダーUIのレンダリング
+    function renderFolder() {
+      const container = document.getElementById('folderContainer');
+      container.innerHTML = '';
+
+      const folderItem = document.createElement('div');
+      folderItem.className = 'folder-item';
+
+      const folderHeader = document.createElement('div');
+      folderHeader.className = 'folder-header';
+
+      const folderIcon = document.createElement('div');
+      folderIcon.className = 'folder-icon';
+      folderIcon.textContent = '';
+
+      const folderName = document.createElement('div');
+      folderName.className = 'folder-name';
+      folderName.textContent = virtualFolder.name;
+      folderName.contentEditable = true;
+      folderName.addEventListener('blur', () => {
+        virtualFolder.name = folderName.textContent;
+      });
+
+      const folderActions = document.createElement('div');
+      folderActions.className = 'folder-actions';
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'folder-btn';
+      addBtn.textContent = '+';
+      addBtn.title = 'ファイルを追加';
+      addBtn.addEventListener('click', showAddFileDialog);
+
+      folderActions.appendChild(addBtn);
+      folderHeader.appendChild(folderIcon);
+      folderHeader.appendChild(folderName);
+      folderHeader.appendChild(folderActions);
+
+      const folderContent = document.createElement('div');
+      folderContent.className = 'folder-content';
+
+      virtualFolder.files.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+
+        const fileIcon = document.createElement('div');
+        fileIcon.className = 'file-icon';
+        fileIcon.textContent = getFileIcon(file.type);
+        fileIcon.style.cursor = 'pointer';
+
+        // 画像アイコンクリックでプレビュー表示
+        if (file.type === 'image') {
+          fileIcon.addEventListener('click', () => {
+            const previewArea = document.getElementById('previewArea');
+            const previewImage = document.getElementById('previewImage');
+            previewImage.src = file.data;
+            previewArea.classList.add('show');
+          });
+        }
+
+        // 音声アイコンクリックで再生
+        if (file.type === 'audio') {
+          fileIcon.addEventListener('click', () => {
+            const audio = new Audio(file.data);
+            audio.play();
+          });
+        }
+
+        const fileName = document.createElement('div');
+        fileName.className = 'file-name';
+        fileName.textContent = file.name;
+        fileName.contentEditable = true;
+        fileName.addEventListener('blur', () => {
+          file.name = fileName.textContent;
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-file-btn';
+        deleteBtn.textContent = '×';
+        deleteBtn.addEventListener('click', () => {
+          virtualFolder.files.splice(index, 1);
+          renderFolder();
+        });
+
+        fileItem.appendChild(fileIcon);
+        fileItem.appendChild(fileName);
+        fileItem.appendChild(deleteBtn);
+        folderContent.appendChild(fileItem);
+      });
+
+      folderItem.appendChild(folderHeader);
+      folderItem.appendChild(folderContent);
+      container.appendChild(folderItem);
+    }
+
+    function getFileIcon(type) {
+      switch(type) {
+        case 'image': return '🖼️';
+        case 'audio': return '🎵';
+        case 'memo': return '📝';
+        default: return '📄';
+      }
+    }
+
+    function showAddFileDialog() {
+      const choice = prompt('追加するファイルの種類を選択:\n1: 画像\n2: 音声\n3: メモ\n番号を入力してください', '3');
+      
+      if (!choice) return;
+
+      switch(choice.trim()) {
+        case '1':
+          addImageFile();
+          break;
+        case '2':
+          addAudioFile();
+          break;
+        case '3':
+          addMemoFile();
+          break;
+        default:
+          alert('無効な選択です');
+      }
+    }
+
+    function addImageFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            virtualFolder.files.push({
+              type: 'image',
+              name: file.name,
+              data: event.target.result
+            });
+            renderFolder();
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    }
+
+    function addAudioFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'audio/*';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            virtualFolder.files.push({
+              type: 'audio',
+              name: file.name,
+              data: event.target.result
+            });
+            renderFolder();
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    }
+
+    function addMemoFile() {
+      const memoName = prompt('メモの名前を入力', 'memo.txt');
+      if (!memoName) return;
+
+      const memoContent = prompt('メモの内容を入力', '');
+      if (memoContent === null) return;
+
+      virtualFolder.files.push({
+        type: 'memo',
+        name: memoName,
+        content: memoContent
+      });
+      renderFolder();
+    }
+
+    // 初期レンダリング
+    renderFolder();
+
+    // プレビュー閉じるボタン
+    document.getElementById('previewClose').addEventListener('click', () => {
+      document.getElementById('previewArea').classList.remove('show');
+    });
+
     // 初期値の読み込み
     memo.value = history[0];
 
@@ -126,31 +518,62 @@
 
     // 保存ボタン：JSZipを使用して .love ファイルを作成
     document.getElementById('saveBtn').addEventListener('click', async () => {
-      if (!memo.value.trim()) {
-        alert('メモが空です');
+      if (!memo.value.trim() && virtualFolder.files.length === 0) {
+        alert('メモが空で、フォルダーにもファイルがありません');
         return;
       }
 
-      let fileName = localStorage.getItem('memo_file_name');
-      if (!fileName) {
-        fileName = prompt('プロジェクト名を入力してください', 'result');
-        if (!fileName) return;
-        if (!fileName.toLowerCase().endsWith('.love')) {
-          fileName += '.love';
+      // 保存済みのプロジェクト名リストを取得
+      let savedProjects = JSON.parse(localStorage.getItem('saved_projects') || '[]');
+      
+      // デフォルト名をフォルダー名に設定
+      const defaultName = virtualFolder.name.endsWith('.love') ? virtualFolder.name : virtualFolder.name + '.love';
+      let fileName = prompt('プロジェクト名を入力してください', defaultName);
+      
+      if (!fileName) return;
+      
+      if (!fileName.toLowerCase().endsWith('.love')) {
+        fileName += '.love';
+      }
+
+      // 既存のプロジェクト名があれば上書き確認
+      if (savedProjects.includes(fileName)) {
+        if (!confirm(`「${fileName}」は既に存在します。上書きしますか？`)) {
+          return;
         }
-        localStorage.setItem('memo_file_name', fileName);
+      } else {
+        savedProjects.push(fileName);
+        localStorage.setItem('saved_projects', JSON.stringify(savedProjects));
       }
 
       const zip = new JSZip();
+      
+      // main.luaを追加
       zip.file("main.lua", memo.value);
+      
+      // 仮想フォルダーのファイルを追加
+      virtualFolder.files.forEach(file => {
+        if (file.type === 'image' || file.type === 'audio') {
+          // base64データをバイナリに変換
+          const base64Data = file.data.split(',')[1];
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          zip.file(file.name, bytes);
+        } else if (file.type === 'memo') {
+          zip.file(file.name, file.content);
+        }
+      });
 
-      // ★ここが重要（arraybufferで取得）
+      // arraybufferで取得
       const buffer = await zip.generateAsync({
         type: "arraybuffer",
         compression: "DEFLATE"
       });
 
-      // ★ZIP扱いされにくいBlob
+      // ZIP扱いされにくいBlob
       const blob = new Blob([buffer], {
         type: "application/force-download"
       });
@@ -161,7 +584,7 @@
       a.href = url;
       a.download = fileName;
 
-      // ★Android対策：一瞬遅らせてクリック
+      // Android対策：一瞬遅らせてクリック
       document.body.appendChild(a);
       setTimeout(() => {
         a.click();
