@@ -3,221 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1b1b1b">
+  <link rel="manifest" href="manifest.json">
   <title>Memo pad2</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-    }
-
-    body {
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      padding: 10px 6px;
-      background: #1b1b1b;
-      border-bottom: 1px solid #333;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .tool-btn {
-      width: 44px;
-      height: 44px;
-      border: none;
-      border-radius: 12px;
-      background: #2a2a2a;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-    }
-
-    .tool-btn:active {
-      transform: scale(0.96);
-    }
-
-    .tool-btn svg {
-      width: 22px;
-      height: 22px;
-      display: block;
-      margin: auto;
-      pointer-events: none;
-      color: white;
-    }
-
-    .editor-wrap {
-      flex: 1;
-      padding: 12px;
-    }
-
-    textarea {
-      width: 100%;
-      height: 100%;
-      resize: none;
-      border: none;
-      outline: none;
-      border-radius: 16px;
-      padding: 16px;
-      font-size: 18px;
-      line-height: 1.6;
-      background: #1d1d1d;
-      color: white;
-    }
-
-    .hidden {
-      display: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background: #111; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .toolbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-around; padding: 10px 6px; background: #1b1b1b; border-bottom: 1px solid #333; flex-wrap: wrap; gap: 8px; }
+    .tool-btn { width: 44px; height: 44px; border: none; border-radius: 12px; background: #2a2a2a; color: white; font-size: 20px; cursor: pointer; }
+    .tool-btn:active { transform: scale(0.96); }
+    .tool-btn svg { width: 22px; height: 22px; display: block; margin: auto; pointer-events: none; color: white; }
+    .editor-wrap { flex: 1; padding: 12px; }
+    textarea { width: 100%; height: 100%; resize: none; border: none; outline: none; border-radius: 16px; padding: 16px; font-size: 18px; line-height: 1.6; background: #1d1d1d; color: white; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-
   <div class="toolbar">
-    <button class="tool-btn" id="voiceBtn" title="音声入力"><svg viewBox="0 0 24 24" aria-label="音声入力"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="saveBtn" title="saveaslove"><svg viewBox="0 0 24 24" aria-label="保存"><path d="M5 3h11l3 3v15H5V3zm2 2v14h10V7.5L15.5 5H15v4H9V5H7z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="selectAllBtn" title="全て選択"><svg viewBox="0 0 24 24" aria-label="全選択"><path d="M4 4h7v2H6v5H4V4zm9 0h7v7h-2V6h-5V4zM4 13h2v5h5v2H4v-7zm14 0h2v7h-7v-2h5v-5z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="pasteBtn" title="貼り付け"><svg viewBox="0 0 24 24" aria-label="貼り付け"><path d="M9 2h6v2h3v18H6V4h3V2zm2 2v1h2V4h-2zm-3 3v13h8V7H8z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="copyBtn" title="コピー"><svg viewBox="0 0 24 24" aria-label="コピー"><path d="M8 7V3h11v14h-4v4H4V7h4zm2 0h5v8h2V5h-7v2zm-4 2v10h7V9H6z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="deleteBtn" title="削除"><svg viewBox="0 0 24 24" aria-label="削除"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="undoBtn" title="元に戻す"><svg viewBox="0 0 24 24" aria-label="元に戻す"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6a1 1 0 1 0 2 0c0-4.42-3.58-8-8-8z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="redoBtn" title="やり直し"><svg viewBox="0 0 24 24" aria-label="やり直し"><path d="M12 5c-4.42 0-8 3.58-8 8a1 1 0 1 0 2 0c0-3.31 2.69-6 6-6v3l5-5-5-5v3z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="fontBtn" title="文字サイズ"><svg viewBox="0 0 24 24" aria-label="文字サイズ"><path d="M4 20l4-12h2l4 12h-2l-1-3H7l-1 3H4zm4-5h3l-1.5-4.5L8 15zm8 5V8h6v2h-2v10h-2V10h-2V8z" fill="currentColor"/></svg></button>
-    <button class="tool-btn" id="settingBtn" title="設定"><svg viewBox="0 0 24 24" aria-label="設定"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm9 4l-2.1.7.2 2.2-2 1.2-1.7-1.4-2 .8-.4 2.2h-2l-.4-2.2-2-.8-1.7 1.4-2-1.2.2-2.2L3 12l2.1-.7-.2-2.2 2-1.2 1.7 1.4 2-.8.4-2.2h2l.4 2.2 2 .8 1.7-1.4 2 1.2-.2 2.2L21 12z" fill="currentColor"/></svg></button>
-  </div></textarea>
+    <button class="tool-btn" id="voiceBtn" title="音声入力"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="saveBtn" title="saveaslove"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5V3zm2 2v14h10V7.5L15.5 5H15v4H9V5H7z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="selectAllBtn" title="全て選択"><svg viewBox="0 0 24 24"><path d="M4 4h7v2H6v5H4V4zm9 0h7v7h-2V6h-5V4zM4 13h2v5h5v2H4v-7zm14 0h2v7h-7v-2h5v-5z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="pasteBtn" title="貼り付け"><svg viewBox="0 0 24 24"><path d="M9 2h6v2h3v18H6V4h3V2zm2 2v1h2V4h-2zm-3 3v13h8V7H8z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="copyBtn" title="コピー"><svg viewBox="0 0 24 24"><path d="M8 7V3h11v14h-4v4H4V7h4zm2 0h5v8h2V5h-7v2zm-4 2v10h7V9H6z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="deleteBtn" title="削除"><svg viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="undoBtn" title="元に戻す"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6a1 1 0 1 0 2 0c0-4.42-3.58-8-8-8z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="redoBtn" title="やり直し"><svg viewBox="0 0 24 24"><path d="M12 5c-4.42 0-8 3.58-8 8a1 1 0 1 0 2 0c0-3.31 2.69-6 6-6v3l5-5-5-5v3z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="fontBtn" title="文字サイズ"><svg viewBox="0 0 24 24"><path d="M4 20l4-12h2l4 12h-2l-1-3H7l-1 3H4zm4-5h3l-1.5-4.5L8 15zm8 5V8h6v2h-2v10h-2V10h-2V8z" fill="currentColor"/></svg></button>
+    <button class="tool-btn" id="settingBtn" title="設定"><svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm9 4l-2.1.7.2 2.2-2 1.2-1.7-1.4-2 .8-.4 2.2h-2l-.4-2.2-2-.8-1.7 1.4-2-1.2.2-2.2L3 12l2.1-.7-.2-2.2 2-1.2 1.7 1.4 2-.8.4-2.2h2l.4 2.2 2 .8 1.7-1.4 2 1.2-.2 2.2L21 12z" fill="currentColor"/></svg></button>
   </div>
-
+  <div class="editor-wrap">
+    <textarea id="memo" class="hidden"></textarea>
+  </div>
   <script>
     const memo = document.getElementById('memo');
     let fontSize = 18;
     let history = [''];
     let historyIndex = 0;
-
-    // 自動保存
     memo.value = localStorage.getItem('memo_text') || '';
     memo.addEventListener('input', () => {
       localStorage.setItem('memo_text', memo.value);
-
-      if (history[historyIndex] !== memo.value) {
-        history = history.slice(0, historyIndex + 1);
-        history.push(memo.value);
-        historyIndex++;
-      }
+      if (history[historyIndex] !== memo.value) { history = history.slice(0, historyIndex + 1); history.push(memo.value); historyIndex++; }
     });
-
-    // select all
-    document.getElementById('selectAllBtn').addEventListener('click', () => {
-      memo.focus();
-      memo.select();
-    });
-
-    // copy
-    document.getElementById('copyBtn').addEventListener('click', async () => {
-      await navigator.clipboard.writeText(memo.value);
-    });
-
-    // paste
-    document.getElementById('pasteBtn').addEventListener('click', async () => {
-      const text = await navigator.clipboard.readText();
-      memo.value += text;
-      localStorage.setItem('memo_text', memo.value);
-    });
-
-    // undo
-    document.getElementById('undoBtn').addEventListener('click', () => {
-      if (historyIndex > 0) {
-        historyIndex--;
-        memo.value = history[historyIndex];
-        localStorage.setItem('memo_text', memo.value);
-      }
-    });
-
-    // redo
-    document.getElementById('redoBtn').addEventListener('click', () => {
-      if (historyIndex < history.length - 1) {
-        historyIndex++;
-        memo.value = history[historyIndex];
-        localStorage.setItem('memo_text', memo.value);
-      }
-    });
-
-    // delete
-    document.getElementById('deleteBtn').addEventListener('click', () => {
-      memo.value = '';
-      localStorage.removeItem('memo_text');
-    });
-
-    // font size
-    document.getElementById('fontBtn').addEventListener('click', () => {
-      fontSize += 2;
-      if (fontSize > 30) fontSize = 14;
-      memo.style.fontSize = fontSize + 'px';
-    });
-
-    // save（最初だけ名前入力 → 以後は同じ名前で保存）
+    document.getElementById('selectAllBtn').addEventListener('click', () => { memo.focus(); memo.select(); });
+    document.getElementById('copyBtn').addEventListener('click', async () => { await navigator.clipboard.writeText(memo.value); });
+    document.getElementById('pasteBtn').addEventListener('click', async () => { const text = await navigator.clipboard.readText(); memo.value += text; localStorage.setItem('memo_text', memo.value); });
+    document.getElementById('undoBtn').addEventListener('click', () => { if (historyIndex > 0) { historyIndex--; memo.value = history[historyIndex]; localStorage.setItem('memo_text', memo.value); } });
+    document.getElementById('redoBtn').addEventListener('click', () => { if (historyIndex < history.length - 1) { historyIndex++; memo.value = history[historyIndex]; localStorage.setItem('memo_text', memo.value); } });
+    document.getElementById('deleteBtn').addEventListener('click', () => { memo.value = ''; localStorage.removeItem('memo_text'); });
+    document.getElementById('fontBtn').addEventListener('click', () => { fontSize += 2; if (fontSize > 30) fontSize = 14; memo.style.fontSize = fontSize + 'px'; });
     document.getElementById('saveBtn').addEventListener('click', () => {
       let fileName = localStorage.getItem('memo_file_name');
-
-      // 初回のみ名前を聞く
-      if (!fileName) {
-        fileName = prompt('ファイル名を入力', 'result');
-
-        if (!fileName) return;
-
-        if (!fileName.endsWith('.love')) {
-          fileName += '.love';
-        }
-
-        localStorage.setItem('memo_file_name', fileName);
-      }
-
-      const blob = new Blob([memo.value], {
-        type: 'application/octet-stream'
-      });
-
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = fileName;
-      a.click();
+      if (!fileName) { fileName = prompt('ファイル名を入力', 'result'); if (!fileName) return; if (!fileName.endsWith('.love')) fileName += '.love'; localStorage.setItem('memo_file_name', fileName); }
+      const blob = new Blob([memo.value], { type: 'application/octet-stream' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; a.click();
     });
-
-    // 設定
-    document.getElementById('settingBtn').addEventListener('click', () => {
-      // 設定画面は今後追加予定
-    });
-
-    // 音声入力（Chrome Android対応）
     document.getElementById('voiceBtn').addEventListener('click', () => {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      if (!SpeechRecognition) {
-        alert('この端末では音声入力に対応していません');
-        return;
-      }
-
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'ja-JP';
-      recognition.start();
-
-      recognition.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        memo.value += text;
-        localStorage.setItem('memo_text', memo.value);
-      };
+      if (!SpeechRecognition) { alert('この端末では音声入力に対応していません'); return; }
+      const recognition = new SpeechRecognition(); recognition.lang = 'ja-JP'; recognition.start();
+      recognition.onresult = (event) => { const text = event.results[0][0].transcript; memo.value += text; localStorage.setItem('memo_text', memo.value); };
     });
   </script>
-
 </body>
 </html>
