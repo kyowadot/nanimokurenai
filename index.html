@@ -276,15 +276,16 @@
     <img class="preview-content" id="previewImage" alt="プレビュー">
   </div>
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered:', registration);
-        })
-        .catch((error) => {
-          console.log('Service Worker registration failed:', error);
-        });
-    }
+    // PWA機能を一時的に無効化
+    // if ('serviceWorker' in navigator) {
+    //   navigator.serviceWorker.register('./sw.js')
+    //     .then((registration) => {
+    //       console.log('Service Worker registered:', registration);
+    //     })
+    //     .catch((error) => {
+    //       console.log('Service Worker registration failed:', error);
+    //     });
+    // }
 
     const memo = document.getElementById('memo');
     let fontSize = 18;
